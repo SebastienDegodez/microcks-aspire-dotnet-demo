@@ -1,5 +1,11 @@
 # Copilot instructions
 
+## Language Policy
+
+All instructions and prompts in this repository must be written in English. This applies to:
+- All rule and instruction files in `.github/instructions/`
+- All prompt files in `.github/prompts/`
+- All documentation and code comments intended for contributors
 
 ## Development code generation
 
