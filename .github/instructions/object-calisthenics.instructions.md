@@ -3,6 +3,9 @@ applyTo: '**/*.cs'
 ---
 # Object Calisthenics Rules
 
+> ⚠️ **Warning:** This file contains the 9 original Object Calisthenics rules. No additional rules must be added, and none of these rules should be replaced or removed.
+> Examples may be added later if needed.
+
 ## Objective
 This rule enforces the principles of Object Calisthenics to ensure clean, maintainable, and robust code in the backend.
 
