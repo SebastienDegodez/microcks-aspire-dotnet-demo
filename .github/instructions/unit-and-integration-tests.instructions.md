@@ -1,5 +1,5 @@
 ---
-applyTo: '**/*.cs'
+applyTo: 'tests/**/*.cs'
 ---
 # Rules for Unit and Integration Tests
 
@@ -9,7 +9,11 @@ This rule defines the best practices and tools to use for writing unit and integ
 - **Test Framework**: Always use `xunit.v3` for unit and integration tests.
 - **Mocks**: Use `FakeItEasy` to create mocks in unit tests.
 - **Contract Tests or Advanced Mocks**: Use `Testcontainers` and `Microcks` to simulate SOAP or REST calls, or for contract tests.
-- **Integration Tests**: Configure `Testcontainers` for databases or other external dependencies.
+- **Integration Tests**: 
+  - For **Aspire-based projects**, use Aspire's `DistributedApplicationFactory` and Aspire resources for integration tests. Do **not** use `Testcontainers` for resources supported by Aspire.
+  - For **classic ASP.NET Core projects**, use `Testcontainers` to manage external dependencies (databases, APIs, etc.).
+  - If a required resource is not supported by Aspire, you may use `Testcontainers` as a fallback, even in Aspire-based projects.
+  - See `.github/instructions/integration-test-factories.dotnet.instructions.md` for detailed guidance and code examples.
 
 ## General Steps
 1. **Unit Tests**:
@@ -18,7 +22,8 @@ This rule defines the best practices and tools to use for writing unit and integ
    - Verify exceptions and expected results.
 
 2. **Integration Tests**:
-   - Set up a test environment with `Testcontainers`.
+   - For Aspire-based projects, set up the test environment using Aspire's orchestration and `DistributedApplicationFactory`.
+   - For classic projects, set up a test environment with `Testcontainers`.
    - Simulate SOAP or REST calls with `Microcks` if necessary.
    - Validate the entire business flow.
 
@@ -36,7 +41,8 @@ This rule defines the best practices and tools to use for writing unit and integ
 ## Integration Tests
 - Located in `tests/[project].IntegrationTests/`.
 - Test the **Infrastructure** and **Api** layers, and the integration between layers.
-- Use `Testcontainers` to set up real or simulated external dependencies (databases, APIs, etc.).
+- For Aspire-based projects, use Aspire's orchestration and `DistributedApplicationFactory` to set up real or simulated external dependencies.
+- For classic projects, use `Testcontainers` to set up real or simulated external dependencies (databases, APIs, etc.).
 - Use `Microcks` for contract or advanced integration tests (SOAP, REST, events).
 - Validate the entire business flow, including data persistence and external calls.
 - Example folders: `Features/` (for API endpoint tests).
