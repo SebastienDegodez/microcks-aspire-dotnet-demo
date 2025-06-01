@@ -42,12 +42,11 @@ However, you will be asked a small set of concise, grouped questions (no more th
 ## Architecture
 - Clean Architecture
 - DDD principles
-- Deployment: Monolith, Monorepo, or Microservices (adapt as needed)
+- Deployment: {{Specify deployment type: Monolith, Monorepo, Microservices, or other.}}
+- {{List all relevant architecture details, integrations, and patterns.}}
 
 ## Main Flows
-- Order creation with product availability check
-- Event publishing to Kafka
-- Order status update via event listener
+- {{List all main flows, e.g. order creation, event publishing, etc.}}
 
 ## C4 Context Diagram (optional, Mermaid)
 ```mermaid
@@ -59,7 +58,9 @@ C4Context
 
 During initialization, you will be prompted to provide:
 - The business context and main goals
-- Any specific details for architecture or main flows (optional)
+- The deployment type (Monolith, Monorepo, Microservices, or other)
+- All relevant architecture details and integrations (do not leave generic)
+- All main flows (do not leave generic)
 - Optionally, a Mermaid C4 context diagram to situate the service in its ecosystem
 
 ---

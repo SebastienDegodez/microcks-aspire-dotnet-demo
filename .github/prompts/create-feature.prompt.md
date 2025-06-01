@@ -1,6 +1,6 @@
 # Create a New Feature Prompt
 
-This prompt will guide you step by step to define and break down a new feature, following the project conventions for user stories and tasks.
+> **Note:** If `init-project.prompt.md` is not present, you must still create user stories and tasks in the `.project/epics/epic_XXX_user_stories/` and `.project/tasks/` directories, using the mandatory templates and structure described below. The folder structure and templates are always mandatory and must be respected.
 
 ---
 ## Constraints
@@ -10,10 +10,14 @@ This prompt will guide you step by step to define and break down a new feature, 
 - Always ask for confirmation before proceeding to the next step.
 - When breaking down user stories into tasks, you must load and leverage the `.project` knowledge base to clarify intent and challenge technical choices (architecture, layering, DDD, test strategy).
 - Explicitly challenge and validate technical decisions at each step, referencing the `.project` knowledge base and project rules.
+- **User stories must always be created in `.project/epics/epic_XXX_user_stories/` and tasks in `.project/tasks/`, using the templates below, even if `init-project.prompt.md` is not present.**
 
 ## Step 1: Define the User Story
 
 We will start by creating a user story using the following template:
+
+- User stories must be created in `.project/user_stories/` using the template below.
+- Always use the following template and keep acceptance criteria in Gherkin (Given-When-Then) format:
 
 ```markdown
 # User Story [XXX]
@@ -60,6 +64,8 @@ We will start by creating a user story using the following template:
 ## Step 2: Discover and List the Tasks
 
 Now, let's break down the user story into actionable tasks. For each task, we will use the following template:
+
+- Tasks must be created in `.project/tasks/` using the template below.
 
 ```markdown
 # Tasks for User Story [XXX]
@@ -119,3 +125,4 @@ Now, let's break down the user story into actionable tasks. For each task, we wi
 ---
 
 This prompt ensures that every new feature is well-defined, testable, and broken down into actionable tasks, following TDD, DDD, and project conventions. All technical decisions must be challenged and validated using the `.project` knowledge base and project rules.
+
