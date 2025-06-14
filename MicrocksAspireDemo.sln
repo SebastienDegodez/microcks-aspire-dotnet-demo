@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -22,6 +22,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Order.IntegrationTests", "tests\Order.IntegrationTests\Order.IntegrationTests.csproj", "{36967F66-96A7-4ECE-AF87-6F4E56E7BDEC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Order.UnitTests", "tests\Order.UnitTests\Order.UnitTests.csproj", "{31144D4C-700E-4E23-8039-CA51E0074DEA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.Hosting.Microcks", "src\Aspire.Hosting.Microcks\Aspire.Hosting.Microcks.csproj", "{2EFCDBA1-C1AA-4192-86B8-95F8497160A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.Hosting.Microcks.Tests", "tests\Aspire.Hosting.Microcks.Tests\Aspire.Hosting.Microcks.Tests.csproj", "{E09DD61D-9D88-49EF-A106-41E587B2E639}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.Microcks.Testing", "tests\Aspire.Microcks.Testing\Aspire.Microcks.Testing.csproj", "{FC05359A-0BA6-41E8-9F0D-FF523FF3BE6A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +67,18 @@ Global
 		{31144D4C-700E-4E23-8039-CA51E0074DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31144D4C-700E-4E23-8039-CA51E0074DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31144D4C-700E-4E23-8039-CA51E0074DEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EFCDBA1-C1AA-4192-86B8-95F8497160A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EFCDBA1-C1AA-4192-86B8-95F8497160A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EFCDBA1-C1AA-4192-86B8-95F8497160A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EFCDBA1-C1AA-4192-86B8-95F8497160A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E09DD61D-9D88-49EF-A106-41E587B2E639}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E09DD61D-9D88-49EF-A106-41E587B2E639}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E09DD61D-9D88-49EF-A106-41E587B2E639}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E09DD61D-9D88-49EF-A106-41E587B2E639}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC05359A-0BA6-41E8-9F0D-FF523FF3BE6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC05359A-0BA6-41E8-9F0D-FF523FF3BE6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC05359A-0BA6-41E8-9F0D-FF523FF3BE6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC05359A-0BA6-41E8-9F0D-FF523FF3BE6A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,5 +92,8 @@ Global
 		{67125ACC-E5DD-42A7-9E0B-C61A8F6424EF} = {059265B1-88F1-4D45-A8D0-554AA91772A1}
 		{36967F66-96A7-4ECE-AF87-6F4E56E7BDEC} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{31144D4C-700E-4E23-8039-CA51E0074DEA} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{2EFCDBA1-C1AA-4192-86B8-95F8497160A9} = {059265B1-88F1-4D45-A8D0-554AA91772A1}
+		{E09DD61D-9D88-49EF-A106-41E587B2E639} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{FC05359A-0BA6-41E8-9F0D-FF523FF3BE6A} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
