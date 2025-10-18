@@ -6,20 +6,21 @@ using System.Threading.Tasks;
 
 using Aspire.Microcks.Testing;
 using Aspire.Hosting.Testing;
+using Aspire.Microcks.Testing.Fixtures.Mock;
 
-namespace Aspire.Hosting.Microcks.Tests;
+namespace Aspire.Hosting.Microcks.Tests.Features.Mocking;
 
 /// <summary>
 /// Tests for the Microcks resource builder and runtime behavior.
-/// Uses a shared Microcks instance provided by <see cref="SharedMicrocksFixture"/>.
+/// Uses a shared Microcks instance provided by <see cref="MicrocksMockingFixture"/>.
 /// </summary>
-[Collection("Microcks collection")]
-public class MicrocksResourceTests : IClassFixture<SharedMicrocksFixture>
+[Collection("Microcks mocking collection")]
+public class MicrocksResourceTests : IClassFixture<MicrocksMockingFixture>
 {
-    private readonly SharedMicrocksFixture _fixture;
+    private readonly MicrocksMockingFixture _fixture;
     private readonly ITestOutputHelper _testOutputHelper;
 
-    public MicrocksResourceTests(SharedMicrocksFixture fixture, ITestOutputHelper testOutputHelper)
+    public MicrocksResourceTests(MicrocksMockingFixture fixture, ITestOutputHelper testOutputHelper)
     {
         _fixture = fixture;
         _testOutputHelper = testOutputHelper;

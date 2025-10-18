@@ -6,7 +6,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Microcks;
 using Xunit;
 
-namespace Aspire.Microcks.Testing;
+namespace Aspire.Microcks.Testing.Fixtures;
 
 /// <summary>
 /// Shared fixture that starts a single Microcks instance for all tests in the collection.
@@ -15,11 +15,18 @@ namespace Aspire.Microcks.Testing;
 /// configures Microcks with the artifacts used by tests and starts the
 /// distributed application once for the collection lifetime.
 /// </summary>
-public sealed class SharedMicrocksFixture : IAsyncLifetime, IDisposable
+public abstract class SharedMicrocksFixture : IAsyncLifetime, IDisposable
 {
     public TestDistributedApplicationBuilder Builder { get; private set; } = default!;
     public DistributedApplication App { get; private set; } = default!;
     public MicrocksResource MicrocksResource { get; private set; } = default!;
+    
+    // Derived fixtures can override this to customize the builder (for example
+    // to add additional container resources used by tests).
+    protected virtual void ConfigureBuilder(TestDistributedApplicationBuilder builder)
+    {
+        // Default: no-op. Subclasses may add resources or adjust options.
+    }
 
     /// <summary>
     /// Initializes the shared distributed application and starts Microcks.
@@ -28,6 +35,9 @@ public sealed class SharedMicrocksFixture : IAsyncLifetime, IDisposable
     {
         // Create builder without per-test ITestOutputHelper to avoid recreating logging per test
         Builder = TestDistributedApplicationBuilder.Create();
+
+        // Allow derived fixtures to customize the builder before adding Microcks
+        ConfigureBuilder(Builder);
 
         // Configure Microcks with the artifacts used by tests so services are available
         var microcksBuilder = Builder.AddMicrocks("microcks")
