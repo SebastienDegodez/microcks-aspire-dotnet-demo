@@ -183,7 +183,7 @@ components:
           type: string
       required:
       - name
-      - totalPrice
+      - price
       - status
       additionalProperties: false
 tags:

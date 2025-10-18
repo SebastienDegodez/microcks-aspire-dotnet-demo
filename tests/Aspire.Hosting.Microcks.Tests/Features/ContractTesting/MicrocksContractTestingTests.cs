@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 
 using Xunit;
 
-using Aspire.Hosting.Testing;
 using Aspire.Microcks.Testing.Fixtures.Contract;
 using Aspire.Hosting.Microcks.Clients.Model;
 using System.Collections.Generic;
@@ -38,7 +37,7 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
     {
         Assert.NotNull(_fixture.MicrocksResource);
         Assert.NotNull(_fixture.App);
-        
+
         var microcksResource = _fixture.MicrocksResource;
 
         TestRequest badTestRequest = new()
@@ -76,4 +75,37 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
             Assert.Equal("size", message.Request.QueryParameters[0].Name);
         });
     }
+
+
+    /// <summary>
+    /// Tests calling the TestEndpoint API of Microcks with the good implementation,
+    /// expecting validation success.
+    /// </summary>
+    /// <returns></returns>
+    [Fact]
+    public async Task WhenCallingTestEndpoint_WithGoodImplementation_ShouldReturnValidationSuccess()
+    {
+        Assert.NotNull(_fixture.MicrocksResource);
+        Assert.NotNull(_fixture.App);
+
+        var microcksResource = _fixture.MicrocksResource;
+
+        TestRequest goodTestRequest = new()
+        {
+            ServiceId = "API Pastries:0.0.1",
+            RunnerType = TestRunnerType.OPEN_API_SCHEMA,
+            TestEndpoint = "http://good-impl:3002",
+            Timeout = TimeSpan.FromMilliseconds(2000)
+        };
+        // Call TestEndpoint from Microcks Resource
+        var goodTestResult = await microcksResource.TestEndpointAsync(
+            goodTestRequest,
+            TestContext.Current.CancellationToken);
+
+        Assert.True(goodTestResult.Success);
+        Assert.Equal("http://good-impl:3002", goodTestRequest.TestEndpoint);
+        Assert.Equal(3, goodTestResult.TestCaseResults.Count);
+        Assert.Empty(goodTestResult.TestCaseResults[0].TestStepResults[0].Message);
+    }
+
 }
