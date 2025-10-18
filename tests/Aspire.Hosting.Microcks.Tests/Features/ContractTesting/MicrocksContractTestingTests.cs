@@ -108,4 +108,57 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
         Assert.Empty(goodTestResult.TestCaseResults[0].TestStepResults[0].Message);
     }
 
+    // Sur base de WhenCallingTestEndpoint_WithBadImplementation_ShouldReturnValidationFailures 
+    // On va passer un header dans le TestRequest et vérifier qu'il est bien pris en compte 
+    // et de retour dans le test result (dans OperationHeader)
+    [Fact]
+    public async Task WhenCallingTestEndpoint_WithHeader_ShouldReturnHeaderInTestResult()
+    {
+        Assert.NotNull(_fixture.MicrocksResource);
+        Assert.NotNull(_fixture.App);
+
+        var microcksResource = _fixture.MicrocksResource;
+
+        TestRequest headerTestRequest = new()
+        {
+            ServiceId = "API Pastries:0.0.1",
+            RunnerType = TestRunnerType.OPEN_API_SCHEMA,
+            TestEndpoint = "http://good-impl:3002",
+            Timeout = TimeSpan.FromMilliseconds(2000),
+            OperationsHeaders = new Dictionary<string, List<Header>>
+            {
+                {
+                    "GET /pastries",
+                    new List<Header> {
+                        new() {
+                            Name = "X-Custom-Header-1",
+                            Values = "value1,value2,value3"
+                        }
+                    }
+                }
+            }
+        };
+
+        // Call TestEndpoint from Microcks Resource
+        var testResult = await microcksResource.TestEndpointAsync(
+            headerTestRequest,
+            TestContext.Current.CancellationToken);
+
+        Assert.True(testResult.Success);
+        Assert.Equal("http://good-impl:3002", headerTestRequest.TestEndpoint);
+        Assert.Equal(3, testResult.TestCaseResults.Count);
+        Assert.Empty(testResult.TestCaseResults[0].TestStepResults[0].Message);
+
+        // Verify that the header is present in the test result
+        Assert.Single(testResult.OperationsHeaders);
+        Assert.True(testResult.OperationsHeaders.ContainsKey("GET /pastries"));
+        var headers = testResult.OperationsHeaders["GET /pastries"];
+        Assert.Single(headers);
+        Assert.Equal("X-Custom-Header-1", headers[0].Name);
+
+        var headerValues = headers[0].Values.Split(',');
+        var expectedValues = new List<string> { "value1", "value2", "value3" };
+        Assert.Equivalent(expectedValues, headerValues);
+    }
 }
+    
