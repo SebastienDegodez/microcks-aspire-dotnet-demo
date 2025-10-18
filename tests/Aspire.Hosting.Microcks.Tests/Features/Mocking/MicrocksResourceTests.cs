@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Aspire.Microcks.Testing;
 using Aspire.Hosting.Testing;
 using Aspire.Microcks.Testing.Fixtures.Mock;
 
