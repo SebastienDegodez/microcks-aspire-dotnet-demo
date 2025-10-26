@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Xunit;
 
 namespace Aspire.Microcks.Testing.Fixtures.Contract;
 
@@ -11,7 +12,7 @@ public sealed class MicrocksContractValidationFixture : SharedMicrocksFixture
 {
     private const string BAD_PASTRY_IMAGE = "quay.io/microcks/contract-testing-demo:01";
     private const string GOOD_PASTRY_IMAGE = "quay.io/microcks/contract-testing-demo:02";
-
+    
     protected override void ConfigureBuilder(TestDistributedApplicationBuilder builder)
     {
         // Add bad implementation container

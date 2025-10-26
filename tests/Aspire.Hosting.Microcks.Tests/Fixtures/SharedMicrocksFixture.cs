@@ -18,10 +18,12 @@ namespace Aspire.Microcks.Testing.Fixtures;
 /// </summary>
 public abstract class SharedMicrocksFixture : IAsyncLifetime, IDisposable
 {
+    private readonly ITestOutputHelper TestOutputHelper;
+
     public TestDistributedApplicationBuilder Builder { get; private set; } = default!;
     public DistributedApplication App { get; private set; } = default!;
     public MicrocksResource MicrocksResource { get; private set; } = default!;
-    
+
     // Derived fixtures can override this to customize the builder (for example
     // to add additional container resources used by tests).
     protected virtual void ConfigureBuilder(TestDistributedApplicationBuilder builder)
@@ -35,20 +37,20 @@ public abstract class SharedMicrocksFixture : IAsyncLifetime, IDisposable
     public async ValueTask InitializeAsync()
     {
         // Create builder without per-test ITestOutputHelper to avoid recreating logging per test
-        Builder = TestDistributedApplicationBuilder.Create();
+        Builder = TestDistributedApplicationBuilder.Create(o => { });
 
         // Allow derived fixtures to customize the builder before adding Microcks
         ConfigureBuilder(Builder);
 
         // Configure Microcks with the artifacts used by tests so services are available
         var microcksBuilder = Builder.AddMicrocks("microcks")
-            .WithSnapshots(Path.Combine("resources", "microcks-repository.json"))
+            .WithSnapshots(Path.Combine(AppContext.BaseDirectory, "resources", "microcks-repository.json"))
             .WithMainArtifacts(
-                Path.Combine("resources", "apipastries-openapi.yaml"),
-                Path.Combine("resources", "subdir", "weather-forecast-openapi.yaml")
+                Path.Combine(AppContext.BaseDirectory, "resources", "apipastries-openapi.yaml"),
+                Path.Combine(AppContext.BaseDirectory, "resources", "subdir", "weather-forecast-openapi.yaml")
             )
             .WithSecondaryArtifacts(
-                Path.Combine("resources", "apipastries-postman-collection.json")
+                Path.Combine(AppContext.BaseDirectory, "resources", "apipastries-postman-collection.json")
             )
             .WithMainRemoteArtifacts("https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml");
 

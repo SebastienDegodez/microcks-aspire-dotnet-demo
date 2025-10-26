@@ -16,7 +16,7 @@ namespace Aspire.Hosting.Microcks;
 /// This class provides methods to retrieve mock endpoints for different service protocols, including SOAP, REST, GraphQL, and gRPC.
 /// It is intended for use in service discovery and integration testing scenarios.
 /// </summary>
-public class MicrocksResource(string name) : ContainerResource(name)
+public class MicrocksResource(string name) : ContainerResource(name), IResourceWithServiceDiscovery
 {
     internal const string PrimaryEndpointName = "http";
 
@@ -42,7 +42,10 @@ public class MicrocksResource(string name) : ContainerResource(name)
             ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
         };
 
-        var client = RestService.For<IMicrocksClient>(GetEndpoint().Url, refitSettings);
+        var endpointUrl = GetEndpoint().Url;
+
+        Logger?.LogInformation("Creating Microcks client for endpoint URL: {EndpointUrl}", endpointUrl);
+        var client = RestService.For<IMicrocksClient>(endpointUrl, refitSettings);
 
         return client;
     }

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Microcks;
@@ -49,7 +50,8 @@ public static class MicrocksBuilderExtensions
     {
         foreach (var sourcePath in artifactFilePaths)
         {
-            builder.WithAnnotation(new MainArtifactAnnotation(sourcePath));
+            string sourceFilePath = builder.ResolveFilePath(sourcePath);
+            builder.WithAnnotation(new MainArtifactAnnotation(sourceFilePath));
         }
 
         return builder;
@@ -83,8 +85,9 @@ public static class MicrocksBuilderExtensions
     /// <returns>The same <see cref="IResourceBuilder{MicrocksResource}"/> instance for chaining.</returns>
     public static IResourceBuilder<MicrocksResource> WithSecondaryArtifacts(this IResourceBuilder<MicrocksResource> builder, params string[] artifactFilePaths)
     {
-        foreach (var artifactFilePath in artifactFilePaths)
+        foreach (var sourcePath in artifactFilePaths)
         {
+            string artifactFilePath = builder.ResolveFilePath(sourcePath);
             builder.WithAnnotation(new SecondaryArtifactAnnotation(artifactFilePath));
         }
 
@@ -106,8 +109,23 @@ public static class MicrocksBuilderExtensions
         {
             throw new ArgumentException("Snapshots file path cannot be null or whitespace.", nameof(snapshotsFilePath));
         }
-
-        builder.WithAnnotation(new SnapshotsAnnotation(snapshotsFilePath));
+        var resolvedPath = builder.ResolveFilePath(snapshotsFilePath);
+        
+        builder.WithAnnotation(new SnapshotsAnnotation(resolvedPath));
         return builder;
+    }
+
+    /// <summary>
+    /// Resolves a file path, making it absolute if it is relative
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="sourcePath"></param>
+    /// <returns></returns>
+    private static string ResolveFilePath(this IResourceBuilder<MicrocksResource> builder, string sourcePath)
+    {
+        // If the source is a rooted path, use it directly without resolution
+        return Path.IsPathRooted(sourcePath)
+            ? sourcePath
+            : Path.GetFullPath(sourcePath, builder.ApplicationBuilder.AppHostDirectory);
     }
 }

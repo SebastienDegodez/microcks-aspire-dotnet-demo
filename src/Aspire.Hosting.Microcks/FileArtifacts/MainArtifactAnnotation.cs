@@ -12,6 +12,7 @@ internal sealed class MainArtifactAnnotation : IResourceAnnotation
     public MainArtifactAnnotation(string sourcePath)
     {
         ArgumentNullException.ThrowIfNull(sourcePath, nameof(sourcePath));
+        
         if (!File.Exists(sourcePath))
         {
             throw new FileNotFoundException($"Artifact file not found: {sourcePath}");

@@ -2,6 +2,7 @@ using System;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Microcks.Testing;
+using Xunit;
 
 namespace Aspire.Microcks.Testing.Fixtures.Mock;
 
@@ -10,6 +11,5 @@ namespace Aspire.Microcks.Testing.Fixtures.Mock;
 /// to the shared distributed application builder before Microcks is configured.
 /// </summary>
 public sealed class MicrocksMockingFixture : SharedMicrocksFixture
-{
-
+{   
 }
