@@ -18,7 +18,7 @@ internal sealed class SecondaryArtifactAnnotation : IResourceAnnotation
         {
             throw new FileNotFoundException($"Artifact file not found: {sourcePath}");
         }
-        
+
         SourcePath = sourcePath;
     }
 }

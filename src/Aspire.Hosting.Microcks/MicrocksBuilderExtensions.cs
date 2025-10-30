@@ -1,10 +1,16 @@
 using System;
 using System.IO;
+using System.Net.Http;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Microcks;
+using Aspire.Hosting.Microcks.Clients;
 using Aspire.Hosting.Microcks.FileArtifacts;
 using Aspire.Hosting.Microcks.MainRemoteArtifacts;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging;
+using Refit;
 
 namespace Aspire.Hosting;
 
@@ -34,6 +40,48 @@ public static class MicrocksBuilderExtensions
             .WithImageRegistry(MicrocksContainerImageTags.Registry);
 
         builder.Services.TryAddLifecycleHook<MicrocksResourceLifecycleHook>();
+
+        // Configure Refit to use System.Text.Json with explicit options so
+        // enum values are serialized exactly as defined in the enum (no
+        // naming policy that could change casing or underscores).
+        var jsonOptions = new System.Text.Json.JsonSerializerOptions
+        {
+            // Do not use a naming policy which could alter enum text
+            PropertyNamingPolicy = null,
+            // Ensure numbers are not used for enums
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+        };
+
+        var refitSettings = new RefitSettings
+        {
+            ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
+        };
+
+        builder.Services.AddHttpClient(name, (sp, httpClient) =>
+        {
+            var endpointUrl = microcksResource.GetEndpoint().Url;
+            var logger = sp.GetRequiredService<ILogger<MicrocksResource>>();
+            logger.LogInformation("Configuring Microcks HttpClient for endpoint URL: {EndpointUrl}", endpointUrl);
+            httpClient.BaseAddress = new Uri(endpointUrl);
+        });
+
+        // Explicitly register IMicrocksClient as a keyed service to ensure it's available for DI
+        builder.Services.AddKeyedScoped(name, (serviceProvider, serviceKey) =>
+        {
+            var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient(serviceKey.ToString());
+            return RestService.For<IMicrocksClient>(httpClient, refitSettings);
+        });
+
+        // Register keyed service for MicrocksProvider
+        builder.Services.AddKeyedScoped<IMicrocksProvider>(name, (serviceProvider, serviceKey) =>
+        {
+            var client = serviceProvider.GetRequiredKeyedService<IMicrocksClient>(serviceKey);
+            var logger = serviceProvider.GetRequiredService<ILogger<MicrocksProvider>>();
+            var provider = new MicrocksProvider(client, logger);
+
+            return provider;
+        });
 
         return resourceBuilder;
     }
@@ -110,7 +158,7 @@ public static class MicrocksBuilderExtensions
             throw new ArgumentException("Snapshots file path cannot be null or whitespace.", nameof(snapshotsFilePath));
         }
         var resolvedPath = builder.ResolveFilePath(snapshotsFilePath);
-        
+
         builder.WithAnnotation(new SnapshotsAnnotation(resolvedPath));
         return builder;
     }

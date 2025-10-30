@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Microcks;
+using Aspire.Hosting.Microcks.Clients;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Aspire.Microcks.Testing.Fixtures;
@@ -18,8 +20,6 @@ namespace Aspire.Microcks.Testing.Fixtures;
 /// </summary>
 public abstract class SharedMicrocksFixture : IAsyncLifetime, IDisposable
 {
-    private readonly ITestOutputHelper TestOutputHelper;
-
     public TestDistributedApplicationBuilder Builder { get; private set; } = default!;
     public DistributedApplication App { get; private set; } = default!;
     public MicrocksResource MicrocksResource { get; private set; } = default!;

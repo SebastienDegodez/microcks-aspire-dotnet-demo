@@ -6,6 +6,9 @@ using Xunit;
 using Aspire.Microcks.Testing.Fixtures.Contract;
 using Aspire.Hosting.Microcks.Clients.Model;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
+using Aspire.Hosting.Microcks.Clients;
+using Aspire.Hosting.Testing;
 
 namespace Aspire.Hosting.Microcks.Tests.Features.ContractTesting;
 
@@ -39,6 +42,7 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
         Assert.NotNull(_fixture.App);
 
         var microcksResource = _fixture.MicrocksResource;
+        var microcksProvider = _fixture.App.CreateMicrocksProvider(microcksResource.Name);
 
         TestRequest badTestRequest = new()
         {
@@ -48,7 +52,7 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
             Timeout = TimeSpan.FromMilliseconds(2000)
         };
         // Call TestEndpoint from Microcks Resource
-        var badTestResult = await microcksResource.TestEndpointAsync(
+        var badTestResult = await microcksProvider.TestEndpointAsync(
             badTestRequest,
             TestContext.Current.CancellationToken);
 
@@ -58,7 +62,7 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
         Assert.Contains("string found, number expected",
         badTestResult.TestCaseResults[0].TestStepResults[0].Message);
 
-        List<RequestResponsePair> messages = await microcksResource.GetMessagesForTestCaseAsync(
+        List<RequestResponsePair> messages = await microcksProvider.GetMessagesForTestCaseAsync(
             badTestResult,
             "GET /pastries",
             TestContext.Current.CancellationToken);
@@ -89,6 +93,7 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
         Assert.NotNull(_fixture.App);
 
         var microcksResource = _fixture.MicrocksResource;
+        var microcksProvider = _fixture.App.CreateMicrocksProvider(microcksResource.Name);
 
         TestRequest goodTestRequest = new()
         {
@@ -98,7 +103,7 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
             Timeout = TimeSpan.FromMilliseconds(2000)
         };
         // Call TestEndpoint from Microcks Resource
-        var goodTestResult = await microcksResource.TestEndpointAsync(
+        var goodTestResult = await microcksProvider.TestEndpointAsync(
             goodTestRequest,
             TestContext.Current.CancellationToken);
 
@@ -118,6 +123,8 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
         Assert.NotNull(_fixture.App);
 
         var microcksResource = _fixture.MicrocksResource;
+
+        var microcksProvider = _fixture.App.CreateMicrocksProvider(microcksResource.Name);
 
         TestRequest headerTestRequest = new()
         {
@@ -140,7 +147,7 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
         };
 
         // Call TestEndpoint from Microcks Resource
-        var testResult = await microcksResource.TestEndpointAsync(
+        var testResult = await microcksProvider.TestEndpointAsync(
             headerTestRequest,
             TestContext.Current.CancellationToken);
 
@@ -161,4 +168,4 @@ public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContrac
         Assert.Equivalent(expectedValues, headerValues);
     }
 }
-    
+

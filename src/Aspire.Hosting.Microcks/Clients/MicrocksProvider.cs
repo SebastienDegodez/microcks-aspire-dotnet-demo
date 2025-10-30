@@ -1,0 +1,230 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+using Aspire.Hosting.Microcks.Clients.Model;
+using Microsoft.Extensions.Logging;
+using Refit;
+
+namespace Aspire.Hosting.Microcks.Clients;
+
+/// <summary>
+/// Implementation of IMicrocksProvider that encapsulates HttpClient functionality
+/// and provides high-level operations for Microcks contract testing.
+/// </summary>
+internal sealed class MicrocksProvider : IMicrocksProvider
+{
+    private readonly IMicrocksClient _client;
+    private readonly ILogger<MicrocksProvider> _logger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MicrocksProvider"/> class.
+    /// </summary>
+    /// <param name="client">The Microcks client to use for HTTP operations.</param>
+    /// <param name="logger">The logger instance for logging operations.</param>
+    /// <exception cref="ArgumentNullException">Thrown if client or logger is null.</exception
+    public MicrocksProvider(IMicrocksClient client, ILogger<MicrocksProvider> logger)
+    {
+        _client = client ?? throw new ArgumentNullException(nameof(client));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    /// <inheritdoc />
+    public async Task<TestResult> TestEndpointAsync(TestRequest testRequest, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(testRequest);
+
+        TestResult testResult = await _client.TestEndpointAsync(testRequest, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Handle successful creation
+        _logger.LogInformation("Test request for service '{ServiceId}' completed successfully.", testRequest.ServiceId);
+
+        var testResultId = testResult.Id;
+        _logger.LogDebug("Test Result ID: {TestResultId}, new polling for progression", testResultId);
+
+        // Polling for test result completion
+        try
+        {
+            await WaitForConditionAsync(
+                async () => !(await _client.RefreshTestResultAsync(testResultId, cancellationToken)).InProgress,
+                atMost: TimeSpan.FromMilliseconds(1000).Add(testRequest.Timeout),
+                delay: TimeSpan.FromMilliseconds(100),
+                interval: TimeSpan.FromMilliseconds(200),
+                cancellationToken);
+        }
+        catch (TaskCanceledException taskCanceledException)
+        {
+            _logger.LogWarning(
+                taskCanceledException,
+                "Test timeout reached, stopping polling for test {TestEndpoint}", testRequest.TestEndpoint);
+        }
+
+        return await _client.RefreshTestResultAsync(testResultId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<RequestResponsePair>> GetMessagesForTestCaseAsync(
+        TestResult testResult,
+        string operationName,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(testResult);
+        ArgumentException.ThrowIfNullOrEmpty(operationName);
+
+        var operation = operationName.Replace('/', '!');
+        var testCaseId = $"{testResult.Id}-{testResult.TestNumber}-{HttpUtility.UrlEncode(operation)}";
+
+        return await _client.GetMessagesForTestCaseAsync(testResult.Id, testCaseId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ImportArtifactAsync(string artifactPath, bool isMainArtifact, CancellationToken cancellationToken)
+    {
+        const int retryCount = 5;
+        var retryDelay = TimeSpan.FromMilliseconds(100);
+
+        for (var attempt = 1; attempt <= retryCount; attempt++)
+        {
+            try
+            {
+                await UploadArtifactAsync(artifactPath, isMainArtifact, cancellationToken);
+                return;
+            }
+            catch (HttpRequestException ex) when (attempt < retryCount)
+            {
+                _logger.LogWarning(ex, "Transient error uploading artifact '{FileName}', attempt {Attempt}", Path.GetFileName(artifactPath), attempt);
+                await Task.Delay(retryDelay, cancellationToken);
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task ImportSnapshotAsync(string artifactPath, CancellationToken cancellationToken)
+    {
+        await ImportWithRetryAsync(artifactPath, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ImportRemoteArtifactAsync(string remoteUrl, CancellationToken cancellationToken)
+    {
+        var result = await _client.DownloadArtifactAsync(true, remoteUrl, cancellationToken);
+        if (result.StatusCode != HttpStatusCode.Created)
+        {
+            _logger.LogError("Failed to import remote artifact from '{RemoteUrl}' with status code {StatusCode}", remoteUrl, result.StatusCode);
+            throw new InvalidOperationException($"Failed to import remote artifact from '{remoteUrl}'");
+        }
+        _logger.LogInformation("Remote artifact imported successfully from '{RemoteUrl}'", remoteUrl);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var healthCheckResponse = await _client
+                .CheckHealthAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (healthCheckResponse.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Microcks service is healthy");
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Exception during health check for Microcks service");
+        }
+
+        return false;
+    }
+
+    private async Task UploadArtifactAsync(string artifactPath, bool isMainArtifact, CancellationToken cancellationToken)
+    {
+        using var stream = File.OpenRead(artifactPath);
+        var fileName = Path.GetFileName(artifactPath);
+        var content = new StreamPart(stream, fileName, "application/json");
+
+        var result = await _client.UploadArtifactAsync(isMainArtifact, content, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.StatusCode != HttpStatusCode.Created)
+        {
+            _logger.LogError("Failed to upload artifact '{FileName}' with status code {StatusCode}", fileName, result.StatusCode);
+            throw new InvalidOperationException($"Failed to upload artifact '{fileName}'");
+        }
+
+        _logger.LogInformation("Artifact '{FileName}' uploaded successfully", fileName);
+    }
+
+    private async Task ImportWithRetryAsync(string artifactPath, CancellationToken cancellationToken)
+    {
+        const int retryCount = 5;
+        var retryDelay = TimeSpan.FromMilliseconds(100);
+
+        for (var attempt = 1; attempt <= retryCount; attempt++)
+        {
+            try
+            {
+                await ImportArtifactAsync(artifactPath, cancellationToken);
+                return;
+            }
+            catch (HttpRequestException ex) when (attempt < retryCount)
+            {
+                _logger.LogWarning(ex, "Transient error importing artifact '{FileName}', attempt {Attempt}", Path.GetFileName(artifactPath), attempt);
+                await Task.Delay(retryDelay, cancellationToken);
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task ImportArtifactAsync(string artifactPath, CancellationToken cancellationToken)
+    {
+        using var stream = File.OpenRead(artifactPath);
+        var fileName = Path.GetFileName(artifactPath);
+        var content = new StreamPart(stream, fileName, "application/json");
+
+        var result = await _client.ImportArtifactAsync(content, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.StatusCode != HttpStatusCode.Created)
+        {
+            _logger.LogError("Failed to import artifact '{FileName}' with status code {StatusCode}", fileName, result.StatusCode);
+            throw new InvalidOperationException($"Failed to import artifact '{fileName}'");
+        }
+
+        _logger.LogInformation("Artifact '{FileName}' imported successfully", fileName);
+    }
+
+    private static async Task WaitForConditionAsync(
+        Func<Task<bool>> condition,
+        TimeSpan atMost,
+        TimeSpan delay,
+        TimeSpan interval,
+        CancellationToken cancellationToken = default)
+    {
+        // Delay before first check
+        await Task.Delay(delay, cancellationToken);
+
+        // Cancel after atMost
+        using var atMostCancellationToken = new CancellationTokenSource(atMost);
+        // Create linked token so we can be cancelled either by caller or by timeout
+        using var cancellationTokenSource = CancellationTokenSource
+            .CreateLinkedTokenSource(cancellationToken, atMostCancellationToken.Token);
+
+        // Polling
+        while (!await condition())
+        {
+            if (cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                throw new TaskCanceledException();
+            }
+            await Task.Delay(interval, cancellationTokenSource.Token);
+        }
+    }
+}
