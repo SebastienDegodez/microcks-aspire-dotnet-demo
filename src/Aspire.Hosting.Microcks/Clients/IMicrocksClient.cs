@@ -5,7 +5,8 @@ public interface IMicrocksClient :
     IDownloadArtifactClient,
     IImportArtifactClient,
     IHealthCheckClient,
-    ITestsEndpointClient
+    ITestsEndpointClient,
+    IMetricsInvocationClient
 {
     // This interface aggregates all the clients needed for Microcks operations.
     // It can be extended with more clients as needed.

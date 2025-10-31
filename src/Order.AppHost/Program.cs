@@ -8,7 +8,8 @@ var microcks = builder.AddMicrocks("microcks")
         "resources/order-service-openapi.yaml"
     )
     .WithSecondaryArtifacts(
-        "resources/order-service-postman-collection.json"
+        "resources/order-service-postman-collection.json",
+        "resources/third-parties/apipastries-postman-collection.json"
     )
     .WithEnvironment("OTEL_JAVAAGENT_ENABLED", "true")
     .WithOtlpExporter();

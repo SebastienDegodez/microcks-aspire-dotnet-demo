@@ -15,11 +15,6 @@
 //
 //
 
-using System;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
 using Order.Service.Client;
 using Order.Service.Endpoints;
 using Order.Service.UseCases;

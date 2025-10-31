@@ -15,13 +15,6 @@
 //
 //
 
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Runtime.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 using Order.Service.Client.Model;
 
 namespace Order.Service.Client;

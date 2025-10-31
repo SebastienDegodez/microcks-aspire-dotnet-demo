@@ -5,10 +5,9 @@ using Xunit;
 
 using Aspire.Microcks.Testing.Fixtures.Contract;
 using Aspire.Hosting.Microcks.Clients.Model;
+using Aspire.Microcks.Testing.Features.Mocking.Contract;
+
 using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
-using Aspire.Hosting.Microcks.Clients;
-using Aspire.Hosting.Testing;
 
 namespace Aspire.Hosting.Microcks.Tests.Features.ContractTesting;
 
@@ -18,8 +17,8 @@ namespace Aspire.Hosting.Microcks.Tests.Features.ContractTesting;
 /// distributed application and performs basic verification: the Microcks services list is available
 /// and the demo implementations expose HTTP endpoints.
 /// </summary>
-[Collection("Microcks contract collection")]
-public sealed class MicrocksContractTestingTests : IClassFixture<MicrocksContractValidationFixture>
+[Collection(MicrocksContractValidationCollection.CollectionName)]
+public sealed class MicrocksContractTestingTests
 {
     private readonly MicrocksContractValidationFixture _fixture;
     private readonly ITestOutputHelper _testOutputHelper;

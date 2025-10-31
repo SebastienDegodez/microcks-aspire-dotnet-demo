@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,4 +64,24 @@ public interface IMicrocksProvider
     /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
     /// <returns>A task representing the import operation.</returns>
     Task ImportRemoteArtifactAsync(string remoteUrl, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Verify that a service has been called according to its name and version.
+    /// </summary>
+    /// <param name="serviceName">The name of the service to verify.</param>
+    /// <param name="serviceVersion">The version of the service to verify.</param>
+    /// <param name="invocationDate">The date of the service invocation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task representing the verification result.</returns>
+    Task<bool> VerifyAsync(string serviceName, string serviceVersion, DateOnly? invocationDate = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get the number of invocations for a given service.
+    /// </summary>
+    /// <param name="serviceName">The name of the service.</param>
+    /// <param name="serviceVersion">The version of the service.</param>
+    /// <param name="invocationDate">The date of the service invocation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>A task representing the number of invocations.</returns>
+    Task<double> GetServiceInvocationsCountAsync(string serviceName, string serviceVersion, DateOnly? invocationDate = null, CancellationToken cancellationToken = default);
 }

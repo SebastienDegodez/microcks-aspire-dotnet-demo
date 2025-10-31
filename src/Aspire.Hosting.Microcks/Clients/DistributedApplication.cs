@@ -1,4 +1,5 @@
 using System;
+using Aspire.Hosting.Microcks;
 using Aspire.Hosting.Microcks.Clients;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,4 +28,5 @@ public static class DistributedApplicationExtensions
 
         return microcksProvider;
     }
+
 }

@@ -42,6 +42,8 @@ public abstract class SharedMicrocksFixture : IAsyncLifetime, IDisposable
         // Allow derived fixtures to customize the builder before adding Microcks
         ConfigureBuilder(Builder);
 
+        // TODO: Check to replace AppContext.BaseDirectory by other variable Builder.AppHostDirectory ?
+        
         // Configure Microcks with the artifacts used by tests so services are available
         var microcksBuilder = Builder.AddMicrocks("microcks")
             .WithSnapshots(Path.Combine(AppContext.BaseDirectory, "resources", "microcks-repository.json"))

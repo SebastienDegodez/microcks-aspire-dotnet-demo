@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using Aspire.Hosting.Testing;
 using Aspire.Microcks.Testing.Fixtures.Mock;
+using Aspire.Hosting.Microcks.Clients;
 
 namespace Aspire.Hosting.Microcks.Tests.Features.Mocking;
 
@@ -13,8 +14,8 @@ namespace Aspire.Hosting.Microcks.Tests.Features.Mocking;
 /// Tests for the Microcks resource builder and runtime behavior.
 /// Uses a shared Microcks instance provided by <see cref="MicrocksMockingFixture"/>.
 /// </summary>
-[Collection("Microcks mocking collection")]
-public class MicrocksResourceTests : IClassFixture<MicrocksMockingFixture>
+[Collection(MicrocksMockingCollection.CollectionName)]
+public class MicrocksResourceTests
 {
     private readonly MicrocksMockingFixture _fixture;
     private readonly ITestOutputHelper _testOutputHelper;
@@ -85,7 +86,7 @@ public class MicrocksResourceTests : IClassFixture<MicrocksMockingFixture>
         };
 
         // Call uri to get the list of services using the shared app's http client
-        using var httpClient = app.CreateHttpClient("microcks");
+        using var httpClient = app.CreateHttpClient(microcks.Name);
         var response = await httpClient.GetAsync(uriBuilder.Uri, TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
 
@@ -125,26 +126,56 @@ public class MicrocksResourceTests : IClassFixture<MicrocksMockingFixture>
     [InlineData("API Pastries", "0.0.1", "pastries/Millefeuille", "Millefeuille")]
     [InlineData("API Pastries", "0.0.1", "pastries/Eclair Chocolat", "Eclair Chocolat")]
     [InlineData("API Pastry - 2.0", "2.0.0", "pastry/Millefeuille", "Millefeuille")]
-    public async Task WhenCallingRestMocks_ShouldReturnExpectedNameInPayload(string serviceName, string serviceVersion, string relativePath, string expectedName)
+    public async Task WhenCallingRestMocks_ShouldReturnExpectedNameInPayload(
+        string serviceName, string serviceVersion, string relativePath, string expectedName)
     {
         // Arrange
-        var microcks = _fixture.MicrocksResource;
+        MicrocksResource microcksResource = _fixture.MicrocksResource;
+        IMicrocksProvider microcksProvider = _fixture.App.CreateMicrocksProvider(microcksResource.Name);
         var app = _fixture.App;
 
-        Assert.NotNull(microcks);
+        Assert.NotNull(microcksResource);
         Assert.NotNull(app);
 
-        using var microcksHttpClient = app.CreateHttpClient("microcks");
-        var serviceEndpoint = microcks.GetRestMockEndpoint(serviceName, serviceVersion);
+        using var microcksHttpClient = app.CreateHttpClient(microcksResource.Name);
+
+        // Get the service endpoint
+        var serviceEndpoint = microcksResource.GetRestMockEndpoint(serviceName, serviceVersion);
 
         // Act
-        var response = await microcksHttpClient.GetAsync($"{serviceEndpoint}/{relativePath}", TestContext.Current.CancellationToken);
+        // Call verify endpoint before mock invocation
+        bool isVerifiedBefore = await microcksProvider
+            .VerifyAsync(serviceName, serviceVersion, cancellationToken: TestContext.Current.CancellationToken);
+
+        // Get Invocation count before mock invocation
+        double invocationCountBefore = await microcksProvider
+            .GetServiceInvocationsCountAsync(serviceName, serviceVersion, cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert that the invocation count matches the verification status
+        Assert.Equal(isVerifiedBefore, invocationCountBefore > 0);
+
+        // Call the endpoint provided by Microcks
+        var response = await microcksHttpClient.GetAsync($"{serviceEndpoint}/{relativePath}",
+            TestContext.Current.CancellationToken);
+
         response.EnsureSuccessStatusCode();
+
         var responseBody = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         using var json = System.Text.Json.JsonDocument.Parse(responseBody);
 
         // Assert
         Assert.Equal(expectedName, json.RootElement.GetProperty("name").GetString());
+
+        // Verify that the service is now verified
+        bool isVerifiedAfter = await microcksProvider
+            .VerifyAsync(serviceName, serviceVersion, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.True(isVerifiedAfter, "Service should be verified after mock invocation");
+        
+        // Get Invocation count after mock invocation
+        double invocationCountAfter = await microcksProvider
+            .GetServiceInvocationsCountAsync(serviceName, serviceVersion, cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(invocationCountBefore + 1, invocationCountAfter);
     }
 
 }

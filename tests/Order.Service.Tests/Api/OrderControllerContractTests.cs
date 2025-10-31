@@ -7,16 +7,17 @@ using System.Text.Json;
 
 namespace Order.IntegrationTests.Api;
 
-[Collection(MicrocksAspireFactory.CollectionName)]
+[Collection(OrderHostAspireFactory.CollectionName)]
 public class OrderControllerContractTests
 {
-    private readonly MicrocksAspireFactory fixture;
+    private readonly OrderHostAspireFactory orderHostAspireFactory;
     private readonly ITestOutputHelper testOutputHelper;
 
-    public OrderControllerContractTests(MicrocksAspireFactory fixture,
+    public OrderControllerContractTests(
+        OrderHostAspireFactory orderHostAspireFactory,
         ITestOutputHelper testOutputHelper)
     {
-        this.fixture = fixture;
+        this.orderHostAspireFactory = orderHostAspireFactory;
         this.testOutputHelper = testOutputHelper;
     }
 
@@ -24,7 +25,7 @@ public class OrderControllerContractTests
     public async Task TestOpenApiContract()
     {
         // Arrange
-        var app = fixture.App;
+        var app = orderHostAspireFactory.App;
         int port = app.GetEndpoint("Order-Api").Port;
 
         // Act
@@ -58,7 +59,7 @@ public class OrderControllerContractTests
     public async Task TestOpenAPIContractAndBusinessConformance()
     {
         // Arrange
-        var app = fixture.App;
+        var app = orderHostAspireFactory.App;
         int port = app.GetEndpoint("Order-Api").Port;
 
         TestRequest request = new()

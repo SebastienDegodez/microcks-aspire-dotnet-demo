@@ -227,4 +227,53 @@ internal sealed class MicrocksProvider : IMicrocksProvider
             await Task.Delay(interval, cancellationTokenSource.Token);
         }
     }
+
+    /// <inheritdoc />
+    public async Task<bool> VerifyAsync(string serviceName, string serviceVersion,
+        DateOnly? invocationDate = null, CancellationToken cancellationToken = default)
+    {
+        var dailyInvocationStatistic = await this.GetServiceInvocationsAsync(
+            serviceName, serviceVersion, invocationDate: invocationDate, cancellationToken: cancellationToken);
+        if ( dailyInvocationStatistic == null)
+        {
+            return false;
+        }
+        return dailyInvocationStatistic.DailyCount > 0;
+    }
+
+    private async Task<DailyInvocationStatistic> GetServiceInvocationsAsync(string serviceName, string serviceVersion, DateOnly? invocationDate = null, CancellationToken cancellationToken = default)
+    {
+        // Wait to avoid race condition issue when requesting Microcks Metrics REST API.
+        await Task.Delay(100, cancellationToken);
+        
+        ApiResponse<DailyInvocationStatistic> serviceInvocationsCountResponse = await this._client.GetServiceInvocationsCountAsync(
+            serviceName,
+            serviceVersion,
+            invocationDate,
+            cancellationToken: cancellationToken);
+
+        if (serviceInvocationsCountResponse.StatusCode != HttpStatusCode.OK)
+        {
+            _logger.LogWarning("Failed to get service invocations for '{ServiceName}' with version '{ServiceVersion}'. Status code: {StatusCode}", serviceName, serviceVersion, serviceInvocationsCountResponse.StatusCode);
+            return null;
+        }
+
+        // Content length > 0 pour éviter une exception
+        if (serviceInvocationsCountResponse.Content == null)
+        {
+            _logger.LogWarning("No content received when getting service invocations for '{ServiceName}' with version '{ServiceVersion}'.", serviceName, serviceVersion);
+            return null;
+        }
+
+        DailyInvocationStatistic dailyInvocationStatistic = serviceInvocationsCountResponse.Content;
+
+        return dailyInvocationStatistic;
+    }
+
+    /// <inheritdoc />
+    public async Task<double> GetServiceInvocationsCountAsync(string serviceName, string serviceVersion, DateOnly? invocationDate = null, CancellationToken cancellationToken = default)
+    {
+        var dailyInvocationStatistic = await this.GetServiceInvocationsAsync(serviceName, serviceVersion, invocationDate, cancellationToken);
+        return dailyInvocationStatistic?.DailyCount ?? 0;
+    }
 }

@@ -18,10 +18,4 @@
     <ProjectReference Include="../Aspire.Hosting.Microcks/Aspire.Hosting.Microcks.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="resources\third-parties\apipastries-openapi.yaml" />
-    <Resource Include="resources\third-parties\apipastries-openapi.yaml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
 </Project>

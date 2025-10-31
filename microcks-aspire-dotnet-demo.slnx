@@ -6,6 +6,8 @@
     <Project Path="src/Order.Service/Order.Service.csproj" />  
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Aspire.Hosting.Microcks.Tests/Aspire.Hosting.Microcks.Tests.csproj" />
+    <Project Path="tests/Aspire.Microcks.Testing/Aspire.Microcks.Testing.csproj" />
     <Project Path="tests/Order.Service.Tests/Order.Service.Tests.csproj" />
   </Folder>
 </Solution>
