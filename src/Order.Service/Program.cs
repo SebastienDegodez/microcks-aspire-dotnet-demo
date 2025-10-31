@@ -27,6 +27,7 @@ using Order.Service.UseCases;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddTransient<OrderUseCase>();
+
 var configuration = builder.Configuration;
 var pastryApiSection = configuration.GetRequiredSection("PastryApi");
 var pastryApiUrl = pastryApiSection.GetValue<string>("BaseUrl");
@@ -46,12 +47,15 @@ builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 // ⬆️ Add problem details for better error handling
 
+builder.AddServiceDefaults();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+app.MapDefaultEndpoints();
 
 app.MapOrderEndpoints();
 

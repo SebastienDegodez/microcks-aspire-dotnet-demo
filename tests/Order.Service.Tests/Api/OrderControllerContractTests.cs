@@ -3,7 +3,6 @@ using Aspire.Hosting.Microcks;
 using Aspire.Hosting.Microcks.Clients.Model;
 using Aspire.Hosting.Testing;
 using Aspire.Hosting;
-using Projects;
 using System.Text.Json;
 
 namespace Order.IntegrationTests.Api;
