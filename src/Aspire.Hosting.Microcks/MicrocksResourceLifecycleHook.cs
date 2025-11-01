@@ -94,8 +94,6 @@ internal sealed class MicrocksResourceLifecycleHook
             var endpoint = microcksResource.GetEndpoint();
             if (endpoint.IsAllocated)
             {
-                // Stocker le nom courant pour la résolution par clé dans TryWaitForHealthAsync
-                _currentResourceName = microcksResource.Name;
                 await GetMicrocksHealthyAsync(microcksResource, cancellationTokenSource.Token);
 
                 // Get the provider from DI and use it for upload/import operations
@@ -194,18 +192,18 @@ internal sealed class MicrocksResourceLifecycleHook
             // Ignore cancellation while listening to logs
         }
 
-        await this.WaitForHealthAsync(cancellationToken)
+        await this.WaitForHealthAsync(microcksResource, cancellationToken)
             .ConfigureAwait(false);
     }
 
-    private async Task WaitForHealthAsync(CancellationToken cancellationToken)
+    private async Task WaitForHealthAsync(MicrocksResource microcksResource, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Waiting for Microcks service to be healthy");
 
-        await TryWaitForHealthAsync(cancellationToken);
+        await TryWaitForHealthAsync(microcksResource, cancellationToken);
     }
 
-    private async Task TryWaitForHealthAsync(CancellationToken cancellationToken)
+    private async Task TryWaitForHealthAsync(MicrocksResource microcksResource, CancellationToken cancellationToken)
     {
         const int retryCount = 3;
         var retryDelay = TimeSpan.FromMilliseconds(100);
@@ -219,7 +217,7 @@ internal sealed class MicrocksResourceLifecycleHook
             }
             using var scope = _serviceProvider.CreateScope();
             var microcksProvider = scope.ServiceProvider
-                .GetRequiredKeyedService<IMicrocksProvider>(_currentResourceName);
+                .GetRequiredKeyedService<IMicrocksProvider>(microcksResource.Name);
             if (await microcksProvider.IsHealthyAsync(cancellationToken))
             {
                 return;
@@ -230,8 +228,6 @@ internal sealed class MicrocksResourceLifecycleHook
 
         _logger.LogInformation("Microcks service is unhealthy");
     }
-
-    private string _currentResourceName = string.Empty;
 
     /// <summary>
     /// Cancels any pending watch operations and disposes the internal
