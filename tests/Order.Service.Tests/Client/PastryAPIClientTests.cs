@@ -56,7 +56,7 @@ public class PastryAPIClientTests : IAsyncLifetime
         var pastryAPIClient = this.WebApplicationFactory
             .Services
             .GetRequiredService<PastryAPIClient>(); // Ensure the client is registered
-        
+
         List<Pastry> pastries = await pastryAPIClient.ListPastriesAsync("S", TestContext.Current.CancellationToken);
         Assert.Single(pastries); // Assuming there is 1 pastry in the mock data
 
@@ -83,7 +83,7 @@ public class PastryAPIClientTests : IAsyncLifetime
         var pastryAPIClient = this.WebApplicationFactory
             .Services
             .GetRequiredService<PastryAPIClient>(); // Ensure the client is registered
-        
+
         // Act & Assert : Millefeuille (disponible)
         var millefeuille = await pastryAPIClient.GetPastryByNameAsync("Millefeuille", TestContext.Current.CancellationToken);
         Assert.NotNull(millefeuille);

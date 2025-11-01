@@ -1,3 +1,20 @@
+//
+// Copyright The Microcks Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License")
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0 
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+//
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -234,7 +251,7 @@ internal sealed class MicrocksProvider : IMicrocksProvider
     {
         var dailyInvocationStatistic = await this.GetServiceInvocationsAsync(
             serviceName, serviceVersion, invocationDate: invocationDate, cancellationToken: cancellationToken);
-        if ( dailyInvocationStatistic == null)
+        if (dailyInvocationStatistic == null)
         {
             return false;
         }
@@ -245,7 +262,7 @@ internal sealed class MicrocksProvider : IMicrocksProvider
     {
         // Wait to avoid race condition issue when requesting Microcks Metrics REST API.
         await Task.Delay(100, cancellationToken);
-        
+
         ApiResponse<DailyInvocationStatistic> serviceInvocationsCountResponse = await this._client.GetServiceInvocationsCountAsync(
             serviceName,
             serviceVersion,
