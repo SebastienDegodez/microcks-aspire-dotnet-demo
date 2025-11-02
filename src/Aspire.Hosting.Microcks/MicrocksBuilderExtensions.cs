@@ -17,20 +17,13 @@
 
 using System;
 using System.IO;
-using System.Net.Http;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Microcks;
-using Aspire.Hosting.Microcks.Clients;
 using Aspire.Hosting.Microcks.FileArtifacts;
 using Aspire.Hosting.Microcks.MainRemoteArtifacts;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
-using Microsoft.Extensions.Logging;
-using Refit;
 
 namespace Aspire.Hosting;
-
 
 /// <summary>
 /// Extension methods to configure a Microcks resource on a distributed
@@ -58,47 +51,8 @@ public static class MicrocksBuilderExtensions
 
         builder.Services.TryAddLifecycleHook<MicrocksResourceLifecycleHook>();
 
-        // Configure Refit to use System.Text.Json with explicit options so
-        // enum values are serialized exactly as defined in the enum (no
-        // naming policy that could change casing or underscores).
-        var jsonOptions = new System.Text.Json.JsonSerializerOptions
-        {
-            // Do not use a naming policy which could alter enum text
-            PropertyNamingPolicy = null,
-            // Ensure numbers are not used for enums
-            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
-        };
-
-        var refitSettings = new RefitSettings
-        {
-            ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
-        };
-
-        builder.Services.AddHttpClient(name, (sp, httpClient) =>
-        {
-            var endpointUrl = microcksResource.GetEndpoint().Url;
-            var logger = sp.GetRequiredService<ILogger<MicrocksResource>>();
-            logger.LogInformation("Configuring Microcks HttpClient for endpoint URL: {EndpointUrl}", endpointUrl);
-            httpClient.BaseAddress = new Uri(endpointUrl);
-        });
-
-        // Explicitly register IMicrocksClient as a keyed service to ensure it's available for DI
-        builder.Services.AddKeyedScoped(name, (serviceProvider, serviceKey) =>
-        {
-            var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            var httpClient = httpClientFactory.CreateClient(serviceKey.ToString());
-            return RestService.For<IMicrocksClient>(httpClient, refitSettings);
-        });
-
-        // Register keyed service for MicrocksProvider
-        builder.Services.AddKeyedScoped<IMicrocksProvider>(name, (serviceProvider, serviceKey) =>
-        {
-            var client = serviceProvider.GetRequiredKeyedService<IMicrocksClient>(serviceKey);
-            var logger = serviceProvider.GetRequiredService<ILogger<MicrocksProvider>>();
-            var provider = new MicrocksProvider(client, logger);
-
-            return provider;
-        });
+        // Configure Client for Microcks API
+        builder.Services.ConfigureMicrocksProvider(microcksResource);
 
         return resourceBuilder;
     }
@@ -192,5 +146,24 @@ public static class MicrocksBuilderExtensions
         return Path.IsPathRooted(sourcePath)
             ? sourcePath
             : Path.GetFullPath(sourcePath, builder.ApplicationBuilder.AppHostDirectory);
+    }
+
+
+    /// <summary>
+    /// Adds network access to the host machine from within the Microcks container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
+    /// <param name="hostAlias">The hostname alias to use for the host machine. Defaults to 'host.docker.internal'.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// This allows the Microcks container to access services running on the host machine
+    /// using the specified hostname alias. 'host.docker.internal' is Docker's standard
+    /// hostname for accessing the host machine from containers.
+    /// </remarks>
+    public static IResourceBuilder<MicrocksResource> WithHostNetworkAccess(this IResourceBuilder<MicrocksResource> builder, string hostAlias = "host.docker.internal")
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        return builder.WithContainerRuntimeArgs($"--add-host={hostAlias}:host-gateway");
     }
 }

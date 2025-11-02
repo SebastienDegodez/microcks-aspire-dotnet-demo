@@ -18,6 +18,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Microcks;
 using Aspire.Hosting.Testing;
+using Microsoft.Extensions.Hosting;
 using Projects;
 
 namespace Order.IntegrationTests.Api;
@@ -29,7 +30,7 @@ public class OrderHostAspireFactory : IAsyncLifetime
     /// </summary>
     public const string CollectionName = "Microcks Aspire Collection";
 
-    public MicrocksResource MicrocksResource { get; private set; }
+    public required MicrocksResource MicrocksResource;
 
     /// <summary>
     /// The distributed application under test.
@@ -38,6 +39,7 @@ public class OrderHostAspireFactory : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
+        await this.App.StopAsync();
         await this.App.DisposeAsync();
     }
 
@@ -51,7 +53,7 @@ public class OrderHostAspireFactory : IAsyncLifetime
         var builder = await DistributedApplicationTestingBuilder
             .CreateAsync<Order_AppHost>(TestContext.Current.CancellationToken);
 
-        this.MicrocksResource = (MicrocksResource)builder.Resources.Single(r => r.Name == "microcks");
+        this.MicrocksResource = (MicrocksResource)builder.Resources.Single(r => r.Name == "microcks")!;
 
         this.App = await builder.BuildAsync(TestContext.Current.CancellationToken);
 

@@ -43,7 +43,7 @@ public class OrderControllerContractTests
     {
         // Arrange
         var app = orderHostAspireFactory.App;
-        int port = app.GetEndpoint("Order-Api").Port;
+        int port = app.GetEndpoint("order-api").Port;
 
         // Act
         TestRequest request = new()
@@ -71,6 +71,37 @@ public class OrderControllerContractTests
 
     }
 
+    [Fact]
+    public async Task TestOpenApiContract_WithServiceDiscovery()
+    {
+        // Arrange
+        var app = orderHostAspireFactory.App;
+
+        // Act
+        TestRequest request = new()
+        {
+            ServiceId = "Order Service API:0.1.0",
+            RunnerType = TestRunnerType.OPEN_API_SCHEMA,
+            TestEndpoint = $"{app.GetEndpoint("order-api")}/api", // Usage de WithHostNetworkAccess("localhost")
+            // FilteredOperations can be used to limit the operations to test
+        };
+        var microcksProvider = app.CreateMicrocksProvider("microcks");
+
+        var testResult = await microcksProvider.TestEndpointAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        // You may inspect complete response object with following:
+        var json = JsonSerializer.Serialize(testResult, new JsonSerializerOptions { WriteIndented = true });
+        testOutputHelper.WriteLine(json);
+
+        Assert.True(testResult.Success);
+
+        Assert.False(testResult.InProgress, "Test should not be in progress");
+        Assert.True(testResult.Success, "Test should be successful");
+
+        Assert.Single(testResult.TestCaseResults);
+
+    }
 
     [Fact]
     public async Task TestOpenAPIContractAndBusinessConformance()

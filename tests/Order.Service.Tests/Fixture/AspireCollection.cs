@@ -15,8 +15,6 @@
 //
 //
 
-using Projects;
-
 namespace Order.IntegrationTests.Api;
 
 [CollectionDefinition(OrderHostAspireFactory.CollectionName)]

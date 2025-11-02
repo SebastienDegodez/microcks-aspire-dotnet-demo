@@ -43,11 +43,11 @@ internal sealed class MicrocksProvider : IMicrocksProvider
     /// </summary>
     /// <param name="client">The Microcks client to use for HTTP operations.</param>
     /// <param name="logger">The logger instance for logging operations.</param>
-    /// <exception cref="ArgumentNullException">Thrown if client or logger is null.</exception
-    public MicrocksProvider(IMicrocksClient client, ILogger<MicrocksProvider> logger)
+    /// <exception cref="ArgumentNullException">Thrown if client or logger is null.</exception>
+    public MicrocksProvider(IMicrocksClient client, ILoggerFactory loggerFactory)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = loggerFactory?.CreateLogger<MicrocksProvider>() ?? throw new ArgumentNullException(nameof(loggerFactory));
     }
 
     /// <inheritdoc />

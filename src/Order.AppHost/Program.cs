@@ -15,8 +15,6 @@
 //
 //
 
-using Aspire.Hosting.Microcks;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var microcks = builder.AddMicrocks("microcks")
@@ -32,7 +30,13 @@ var microcks = builder.AddMicrocks("microcks")
     .WithOtlpExporter();
 
 
-var orderapi = builder.AddProject<Projects.Order_Service>("Order-Api")
+var orderapi = builder.AddProject<Projects.Order_Service>("order-api")
+// TODO: Improve developer experience by adding specific methods to get mock endpoints
+// GetRestMockEndpoint mais aussi GetSoapMockEndpoint, GetAsyncApiMockEndpoint, etc. 
+// WithRestMockEndpoint, WithSoapMockEndpoint, WithAsyncApiMockEndpoint, etc. 
+// WithEnvironmentFromRestMockEndpoint(string name, string serviceName, string serviceVersion)
+// WithEnvironmentFromSoapMockEndpoint(string name, string serviceName, string serviceVersion)
+// WithEnvironmentFromAsyncApiMockEndpoint(string name, string serviceName, string serviceVersion)
     .WithEnvironment("PastryApi:BaseUrl", () =>
     {
         // Callback to get the URL once Microcks is started
@@ -41,6 +45,13 @@ var orderapi = builder.AddProject<Projects.Order_Service>("Order-Api")
         return pastryBaseUrl.ToString();
     })
     .WaitFor(microcks);
+
+//
+// Microcks reference - link the Order API project to Microcks
+microcks.WithHostNetworkAccess()
+    .WithHostNetworkAccess("order-api")
+    .WithHostNetworkAccess("localhost")
+    .WithReferenceRelationship(orderapi);
 
 builder.Build().Run();
 
