@@ -1,3 +1,9 @@
+
+Microcks.Aspire is now maintained in this [repository](http://github.com/microcks/microcks-aspire).
+
+Microcks Aspire Demo is now maintained in this [repository](http://github.com/microcks/microcks-aspire-demo).
+
+
 # Microcks ASPIRE ASP.NET Core Demo
 
 This application is a demonstration of using Microcks with Aspire in an ASP.NET Core environment.
